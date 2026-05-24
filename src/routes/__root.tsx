@@ -72,8 +72,9 @@ function RootComponent() {
 
 function RootLayout() {
   const { state } = useAppState();
-  const hasResults = state.results !== null;
   const hasAltResults = state.altResults !== null;
+  // Show Cut Sheet only after picking a winner from Compare, or when not comparing
+  const showCutSheet = hasAltResults ? state.chosenLabel !== null : state.results !== null;
 
   return (
     <>
@@ -102,15 +103,6 @@ function RootLayout() {
             >
               Optimizer
             </Link>
-            {hasResults && (
-              <Link
-                to="/results"
-                className="nav-link"
-                activeProps={{ className: "nav-link is-active" }}
-              >
-                Cut Sheet
-              </Link>
-            )}
             {hasAltResults && (
               <Link
                 to="/compare"
@@ -118,6 +110,15 @@ function RootLayout() {
                 activeProps={{ className: "nav-link is-active" }}
               >
                 Compare
+              </Link>
+            )}
+            {showCutSheet && (
+              <Link
+                to="/results"
+                className="nav-link"
+                activeProps={{ className: "nav-link is-active" }}
+              >
+                Cut Sheet
               </Link>
             )}
             <Link
