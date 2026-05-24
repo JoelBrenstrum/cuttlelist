@@ -11,7 +11,7 @@ export default function SettingsBar() {
         </span>
         Settings
       </h2>
-      <div className="flex flex-wrap items-end gap-6">
+      <div className="flex flex-wrap items-end gap-4 sm:gap-6">
         {/* Kerf / Blade Width */}
         <div className="flex flex-col gap-1.5">
           <label
@@ -32,7 +32,7 @@ export default function SettingsBar() {
             }}
             min={0}
             step={0.1}
-            className="w-24 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors tabular-nums"
+            className="w-20 sm:w-24 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 min-h-[44px] sm:min-h-0 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors tabular-nums"
           />
         </div>
 
@@ -45,7 +45,7 @@ export default function SettingsBar() {
             <button
               type="button"
               onClick={() => dispatch({ type: "SET_UNIT", unit: "mm" })}
-              className={`px-3 py-1.5 text-sm font-semibold transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 min-h-[44px] sm:min-h-0 text-sm font-semibold transition-colors cursor-pointer ${
                 state.unit === "mm"
                   ? "bg-[var(--lagoon)] text-white"
                   : "bg-[var(--surface)] text-[var(--sea-ink-soft)] hover:bg-[var(--link-bg-hover)]"
@@ -56,7 +56,7 @@ export default function SettingsBar() {
             <button
               type="button"
               onClick={() => dispatch({ type: "SET_UNIT", unit: "in" })}
-              className={`px-3 py-1.5 text-sm font-semibold transition-colors cursor-pointer ${
+              className={`px-3 py-1.5 min-h-[44px] sm:min-h-0 text-sm font-semibold transition-colors cursor-pointer ${
                 state.unit === "in"
                   ? "bg-[var(--lagoon)] text-white"
                   : "bg-[var(--surface)] text-[var(--sea-ink-soft)] hover:bg-[var(--link-bg-hover)]"
@@ -68,7 +68,7 @@ export default function SettingsBar() {
         </div>
 
         {/* Current Set Name */}
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5 min-w-0 flex-1 sm:flex-none">
           <label
             htmlFor="set-name-input"
             className="text-xs uppercase tracking-wider font-semibold text-[var(--sea-ink-soft)]"
@@ -80,7 +80,7 @@ export default function SettingsBar() {
             type="text"
             value={state.currentSetName}
             onChange={(e) => dispatch({ type: "SET_NAME", name: e.target.value })}
-            className="w-44 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors"
+            className="w-full sm:w-44 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 min-h-[44px] sm:min-h-0 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors"
             placeholder="Name this cutlist"
           />
         </div>

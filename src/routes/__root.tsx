@@ -3,7 +3,7 @@ import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { Link } from "@tanstack/react-router";
 import ThemeToggle from "../components/ThemeToggle";
-import { AppProvider } from "../store";
+import { AppProvider, useAppState } from "../store";
 
 import appCss from "../styles.css?url";
 
@@ -65,8 +65,23 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <AppProvider>
+      <RootLayout />
+    </AppProvider>
+  );
+}
+
+function RootLayout() {
+  const { state } = useAppState();
+  const hasResults = state.results !== null;
+  const hasAltResults = state.altResults !== null;
+
+  return (
+    <>
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--header-bg)] px-4 backdrop-blur-lg print:hidden">
+      <header
+        className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--header-bg)] px-4 print:hidden"
+        style={{ WebkitBackdropFilter: "blur(16px)", backdropFilter: "blur(16px)", willChange: "transform" }}
+      >
         <nav className="page-wrap flex flex-wrap items-center gap-x-3 gap-y-2 py-3 sm:py-4">
           <h1 className="m-0 flex-shrink-0 text-base font-semibold tracking-tight">
             <Link
@@ -78,7 +93,7 @@ function RootComponent() {
             </Link>
           </h1>
 
-          <div className="order-3 flex w-full flex-wrap items-center gap-x-4 gap-y-1 pb-1 text-sm font-semibold sm:order-none sm:w-auto sm:flex-nowrap sm:pb-0">
+          <div className="order-3 flex w-full overflow-x-auto items-center gap-x-3 gap-y-1 pb-1 text-xs font-semibold sm:order-none sm:w-auto sm:flex-nowrap sm:pb-0 sm:gap-x-4 sm:text-sm" style={{ WebkitOverflowScrolling: 'touch' }}>
             <Link
               to="/"
               className="nav-link"
@@ -87,20 +102,24 @@ function RootComponent() {
             >
               Optimizer
             </Link>
-            <Link
-              to="/results"
-              className="nav-link"
-              activeProps={{ className: "nav-link is-active" }}
-            >
-              Cut Sheet
-            </Link>
-            <Link
-              to="/compare"
-              className="nav-link"
-              activeProps={{ className: "nav-link is-active" }}
-            >
-              Compare
-            </Link>
+            {hasResults && (
+              <Link
+                to="/results"
+                className="nav-link"
+                activeProps={{ className: "nav-link is-active" }}
+              >
+                Cut Sheet
+              </Link>
+            )}
+            {hasAltResults && (
+              <Link
+                to="/compare"
+                className="nav-link"
+                activeProps={{ className: "nav-link is-active" }}
+              >
+                Compare
+              </Link>
+            )}
             <Link
               to="/saved"
               className="nav-link"
@@ -125,6 +144,6 @@ function RootComponent() {
           CuttleList v0.2.4 — Open source 1D cut optimizer • Built with TanStack Start
         </div>
       </footer>
-    </AppProvider>
+    </>
   );
 }

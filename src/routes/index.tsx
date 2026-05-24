@@ -139,8 +139,8 @@ function InputPage() {
 
           {/* Stats preview */}
           <div className="island-shell rounded-2xl p-5 rise-in" style={{ animationDelay: "320ms" }}>
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex gap-6">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-sm">
+              <div className="flex flex-wrap gap-x-4 gap-y-1 sm:gap-6">
                 <div>
                   <span className="text-[var(--sea-ink-soft)]">Stock types: </span>
                   <strong className="text-[var(--sea-ink)] tabular-nums">
@@ -204,42 +204,44 @@ function InputPage() {
       </div>
 
       {/* Action buttons */}
-      <div className="flex flex-wrap gap-3 mt-6 rise-in" style={{ animationDelay: "400ms" }}>
+      <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3 mt-6 rise-in" style={{ animationDelay: "400ms" }}>
         <button
           type="button"
           onClick={handleOptimize}
           disabled={state.stock.length === 0 || state.cuts.length === 0}
-          className="optimize-btn inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="optimize-btn inline-flex items-center justify-center gap-2 rounded-full px-7 py-3 min-h-[44px] text-sm font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           <Scissors size={16} />
           {state.altEnabled && state.altCuts.length > 0
             ? "Optimize & Compare"
             : "Optimize Cuts"}
         </button>
-        <button
-          type="button"
-          onClick={handleSave}
-          className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:-translate-y-0.5 hover:border-[var(--lagoon)] cursor-pointer"
-        >
-          <Save size={16} />
-          Save Set
-        </button>
-        <button
-          type="button"
-          onClick={handleExport}
-          className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:-translate-y-0.5 hover:border-[var(--lagoon)] cursor-pointer"
-        >
-          <Download size={16} />
-          Export
-        </button>
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:-translate-y-0.5 hover:border-[var(--lagoon)] cursor-pointer"
-        >
-          <Upload size={16} />
-          Import
-        </button>
+        <div className="grid grid-cols-3 sm:flex gap-3">
+          <button
+            type="button"
+            onClick={handleSave}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 min-h-[44px] text-sm font-semibold text-[var(--sea-ink)] transition hover:-translate-y-0.5 hover:border-[var(--lagoon)] cursor-pointer"
+          >
+            <Save size={16} />
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={handleExport}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 min-h-[44px] text-sm font-semibold text-[var(--sea-ink)] transition hover:-translate-y-0.5 hover:border-[var(--lagoon)] cursor-pointer"
+          >
+            <Download size={16} />
+            Export
+          </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 min-h-[44px] text-sm font-semibold text-[var(--sea-ink)] transition hover:-translate-y-0.5 hover:border-[var(--lagoon)] cursor-pointer"
+          >
+            <Upload size={16} />
+            Import
+          </button>
+        </div>
         <input
           ref={fileInputRef}
           type="file"

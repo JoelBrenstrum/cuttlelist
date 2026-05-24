@@ -27,8 +27,8 @@ export default function CutsTable({ unit }: { unit: string }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs uppercase tracking-wider text-[var(--sea-ink-soft)]">
-              <th className="pb-2 pr-2 font-semibold">Label</th>
-              <th className="pb-2 pr-2 font-semibold">Length ({unit})</th>
+              <th className="hidden sm:table-cell pb-2 pr-2 font-semibold">Label</th>
+              <th className="pb-2 pr-2 font-semibold"><span className="hidden sm:inline">Length ({unit})</span><span className="sm:hidden">Len</span></th>
               <th className="pb-2 pr-2 font-semibold">Qty</th>
               <th className="pb-2 w-10 font-semibold"></th>
             </tr>
@@ -36,13 +36,13 @@ export default function CutsTable({ unit }: { unit: string }) {
           <tbody className="divide-y divide-[var(--line)]">
             {cuts.map((c) => (
               <tr key={c.id} className="group">
-                <td className="py-2 pr-2">
+                <td className="hidden sm:table-cell py-2 pr-2">
                   <input
                     type="text"
                     value={c.label ?? ""}
                     onChange={(e) => updateCut(c.id, { label: e.target.value || undefined })}
                     placeholder="Optional"
-                    className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)]/40 outline-none focus:border-[var(--lagoon)] transition-colors"
+                    className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 min-h-[44px] sm:min-h-0 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)]/40 outline-none focus:border-[var(--lagoon)] transition-colors"
                   />
                 </td>
                 <td className="py-2 pr-2">
@@ -57,7 +57,7 @@ export default function CutsTable({ unit }: { unit: string }) {
                     }}
                     min={0}
                     step={1}
-                    className="w-24 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors tabular-nums"
+                    className="w-full min-w-[60px] sm:w-24 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 min-h-[44px] sm:min-h-0 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors tabular-nums"
                   />
                 </td>
                 <td className="py-2 pr-2">
@@ -72,7 +72,7 @@ export default function CutsTable({ unit }: { unit: string }) {
                     }}
                     min={1}
                     step={1}
-                    className="w-16 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors tabular-nums"
+                    className="w-full min-w-[48px] sm:w-16 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 min-h-[44px] sm:min-h-0 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors tabular-nums"
                   />
                 </td>
                 <td className="py-2">
@@ -80,7 +80,7 @@ export default function CutsTable({ unit }: { unit: string }) {
                     type="button"
                     onClick={() => removeCut(c.id)}
                     disabled={cuts.length <= 1}
-                    className="rounded-lg p-1.5 text-[var(--sea-ink-soft)] transition hover:bg-red-500/10 hover:text-red-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+                    className="rounded-lg p-2.5 sm:p-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 flex items-center justify-center text-[var(--sea-ink-soft)] transition hover:bg-red-500/10 hover:text-red-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -90,10 +90,11 @@ export default function CutsTable({ unit }: { unit: string }) {
           </tbody>
           <tfoot>
             <tr className="border-t-2 border-[var(--line)]">
-              <td className="py-2 pr-2 text-xs font-semibold text-[var(--sea-ink-soft)] uppercase tracking-wider">
+              <td className="hidden sm:table-cell py-2 pr-2 text-xs font-semibold text-[var(--sea-ink-soft)] uppercase tracking-wider">
                 Total
               </td>
-              <td className="py-2 pr-2 text-sm font-bold text-[var(--sea-ink)] tabular-nums">
+              <td className="py-2 pr-2 text-xs sm:text-sm font-bold text-[var(--sea-ink)] tabular-nums">
+                <span className="sm:hidden text-[var(--sea-ink-soft)] font-semibold uppercase tracking-wider text-xs mr-1">Total</span>
                 {cuts.reduce((s, c) => s + c.length * c.quantity, 0).toLocaleString()}{" "}
                 <span className="text-xs font-normal text-[var(--sea-ink-soft)]">({unit})</span>
               </td>
