@@ -1,0 +1,128 @@
+import { Plus, Trash2 } from "lucide-react";
+import { useStock } from "../store";
+
+const PRIORITIES = [
+  { value: 1, label: "1 — First" },
+  { value: 2, label: "2 — High" },
+  { value: 3, label: "3 — Normal" },
+  { value: 4, label: "4 — Low" },
+  { value: 5, label: "5 — Last" },
+];
+
+export default function StockTable({ unit }: { unit: string }) {
+  const { stock, addStock, updateStock, removeStock } = useStock();
+
+  return (
+    <div className="island-shell rounded-2xl p-5 rise-in" style={{ animationDelay: "80ms" }}>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-base font-semibold text-[var(--sea-ink)] flex items-center gap-2">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-[rgba(79,184,178,0.18)] text-xs font-bold text-[var(--lagoon-deep)]">
+            S
+          </span>
+          Stock Pieces
+        </h2>
+        <button
+          type="button"
+          onClick={addStock}
+          className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(79,184,178,0.3)] bg-[rgba(79,184,178,0.1)] px-3 py-1.5 text-xs font-semibold text-[var(--lagoon-deep)] transition hover:bg-[rgba(79,184,178,0.2)] hover:-translate-y-0.5 cursor-pointer"
+        >
+          <Plus size={14} />
+          Add Stock
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs uppercase tracking-wider text-[var(--sea-ink-soft)]">
+              <th className="pb-2 pr-2 font-semibold">Label</th>
+              <th className="pb-2 pr-2 font-semibold">Length ({unit})</th>
+              <th className="pb-2 pr-2 font-semibold">Qty</th>
+              <th className="pb-2 pr-2 font-semibold">Priority</th>
+              <th className="pb-2 w-10 font-semibold"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[var(--line)]">
+            {stock.map((s) => (
+              <tr key={s.id} className="group">
+                <td className="py-2 pr-2">
+                  <input
+                    type="text"
+                    value={s.label ?? ""}
+                    onChange={(e) => updateStock(s.id, { label: e.target.value || undefined })}
+                    placeholder="Optional"
+                    className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--sea-ink)] placeholder:text-[var(--sea-ink-soft)]/40 outline-none focus:border-[var(--lagoon)] transition-colors"
+                  />
+                </td>
+                <td className="py-2 pr-2">
+                  <input
+                    type="number"
+                    value={s.length}
+                    onChange={(e) =>
+                      updateStock(s.id, { length: Math.max(0, Number(e.target.value)) })
+                    }
+                    min={0}
+                    step={1}
+                    className="w-24 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors tabular-nums"
+                  />
+                </td>
+                <td className="py-2 pr-2">
+                  <input
+                    type="number"
+                    value={s.quantity}
+                    onChange={(e) =>
+                      updateStock(s.id, {
+                        quantity: Math.max(1, Math.round(Number(e.target.value))),
+                      })
+                    }
+                    min={1}
+                    step={1}
+                    className="w-16 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors tabular-nums"
+                  />
+                </td>
+                <td className="py-2 pr-2">
+                  <select
+                    value={s.priority}
+                    onChange={(e) => updateStock(s.id, { priority: Number(e.target.value) })}
+                    className="rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors cursor-pointer"
+                  >
+                    {PRIORITIES.map((p) => (
+                      <option key={p.value} value={p.value}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td className="py-2">
+                  <button
+                    type="button"
+                    onClick={() => removeStock(s.id)}
+                    disabled={stock.length <= 1}
+                    className="rounded-lg p-1.5 text-[var(--sea-ink-soft)] transition hover:bg-red-500/10 hover:text-red-500 disabled:opacity-20 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr className="border-t-2 border-[var(--line)]">
+              <td className="py-2 pr-2 text-xs font-semibold text-[var(--sea-ink-soft)] uppercase tracking-wider">
+                Total
+              </td>
+              <td className="py-2 pr-2 text-sm font-bold text-[var(--sea-ink)] tabular-nums">
+                {stock.reduce((s, item) => s + item.length * item.quantity, 0).toLocaleString()}{" "}
+                <span className="text-xs font-normal text-[var(--sea-ink-soft)]">({unit})</span>
+              </td>
+              <td className="py-2 pr-2 text-sm font-bold text-[var(--sea-ink)] tabular-nums">
+                {stock.reduce((s, item) => s + item.quantity, 0)}
+              </td>
+              <td colSpan={2} />
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  );
+}
