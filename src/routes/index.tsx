@@ -220,7 +220,7 @@ function InputPage() {
           <button
             type="button"
             onClick={handleSave}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 min-h-[44px] text-sm font-semibold text-[var(--sea-ink)] transition hover:-translate-y-0.5 hover:border-[var(--lagoon)] cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 sm:px-5 py-3 min-h-[44px] text-sm font-semibold text-[var(--sea-ink)] whitespace-nowrap transition hover:-translate-y-0.5 hover:border-[var(--lagoon)] cursor-pointer"
           >
             <Save size={16} />
             Save
@@ -228,7 +228,7 @@ function InputPage() {
           <button
             type="button"
             onClick={handleExport}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 min-h-[44px] text-sm font-semibold text-[var(--sea-ink)] transition hover:-translate-y-0.5 hover:border-[var(--lagoon)] cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 sm:px-5 py-3 min-h-[44px] text-sm font-semibold text-[var(--sea-ink)] whitespace-nowrap transition hover:-translate-y-0.5 hover:border-[var(--lagoon)] cursor-pointer"
           >
             <Download size={16} />
             Export
@@ -236,7 +236,7 @@ function InputPage() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 min-h-[44px] text-sm font-semibold text-[var(--sea-ink)] transition hover:-translate-y-0.5 hover:border-[var(--lagoon)] cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-3 sm:px-5 py-3 min-h-[44px] text-sm font-semibold text-[var(--sea-ink)] whitespace-nowrap transition hover:-translate-y-0.5 hover:border-[var(--lagoon)] cursor-pointer"
           >
             <Upload size={16} />
             Import
