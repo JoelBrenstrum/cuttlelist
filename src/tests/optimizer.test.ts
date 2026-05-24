@@ -522,4 +522,66 @@ describe("optimize", () => {
     expect(result.totalCost).toBeLessThanOrEqual(6);
     expect(result.unplacedCuts).toHaveLength(0);
   });
+
+  // -----------------------------------------------------------------------
+  // Regression: user scenario — priority, fill-gaps, consolidation
+  // -----------------------------------------------------------------------
+
+  it("should use priority 1 stock and fill gaps properly (user scenario)", () => {
+    const stock: StockType[] = [
+      { id: "s4800", length: 4800, quantity: 7, priority: 3 },
+      { id: "s1200", length: 1200, quantity: 3, priority: 1 },
+      { id: "s720", length: 720, quantity: 1, priority: 1 },
+      { id: "s480", length: 480, quantity: 1, priority: 1 },
+    ];
+    const cuts: CutItem[] = [
+      { id: "c480", length: 480, quantity: 18 },
+      { id: "c1000", length: 1000, quantity: 12 },
+      { id: "c1400", length: 1400, quantity: 6 },
+      { id: "c1220", length: 1220, quantity: 3 },
+    ];
+    const result = optimize(stock, cuts, 3);
+
+    // All cuts placed
+    expect(result.unplacedCuts).toHaveLength(0);
+
+    // Priority 1 stock should be used (720mm, 480mm, and at least 1 of the 1200mm)
+    const p1Bins = result.stockResults.filter((sr) => sr.priority === 1);
+    expect(p1Bins.length).toBeGreaterThanOrEqual(3);
+
+    // 480mm stock should be used (perfect fit for 480mm cut)
+    const bin480 = result.stockResults.find((sr) => sr.stockLength === 480);
+    expect(bin480).toBeDefined();
+    expect(bin480!.cuts.length).toBe(1);
+    expect(bin480!.wasteLength).toBe(0);
+
+    // 720mm stock should be used
+    const bin720 = result.stockResults.find((sr) => sr.stockLength === 720);
+    expect(bin720).toBeDefined();
+    expect(bin720!.cuts.length).toBeGreaterThanOrEqual(1);
+
+    // No 1200mm piece should have only 1×480 (60% waste)
+    const bad1200 = result.stockResults.filter(
+      (sr) => sr.stockLength === 1200 && sr.cuts.length === 1 && sr.cuts[0].length === 480,
+    );
+    expect(bad1200).toHaveLength(0);
+
+    // 4800mm bins with only 480mm cuts: the largest should have 9×480 (not 8)
+    const bins480Only = result.stockResults
+      .filter((sr) => sr.stockLength === 4800 && sr.cuts.every((c) => c.length === 480))
+      .sort((a, b) => b.cuts.length - a.cuts.length);
+    if (bins480Only.length > 0) {
+      expect(bins480Only[0].cuts.length).toBeGreaterThanOrEqual(9);
+    }
+
+    // No 4800mm piece with 3×1400 should have a gap > 500mm (480 should fill it)
+    const bins3x1400 = result.stockResults.filter(
+      (sr) =>
+        sr.stockLength === 4800 &&
+        sr.cuts.filter((c) => c.length === 1400).length === 3,
+    );
+    for (const bin of bins3x1400) {
+      expect(bin.wasteLength).toBeLessThan(500);
+    }
+  });
 });

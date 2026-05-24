@@ -3,6 +3,7 @@ import { useAppState } from "../store";
 import SummaryCard from "../components/SummaryCard";
 import WasteSummary from "../components/WasteSummary";
 import ComparisonReport from "../components/ComparisonReport";
+import CopyableJson from "../components/CopyableJson";
 import { ArrowLeft, ArrowRight, GitCompareArrows } from "lucide-react";
 
 export const Route = createFileRoute("/compare")({ component: ComparePage });
@@ -151,9 +152,7 @@ function ComparePage() {
         <summary className="text-sm font-semibold text-[var(--sea-ink)] cursor-pointer">
           Raw JSON Output
         </summary>
-        <pre className="mt-3 overflow-x-auto rounded-lg bg-[var(--surface)] border border-[var(--line)] p-4 text-xs text-[var(--sea-ink-soft)] leading-relaxed">
-          {JSON.stringify({ primary: results, alternative: altResults }, null, 2)}
-        </pre>
+        <CopyableJson data={{ inputs: { stock: state.stock, cuts: state.cuts, altCuts: state.altCuts, kerf: state.kerf, unit: state.unit }, primary: results, alternative: altResults }} />
       </details>
     </main>
   );

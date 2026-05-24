@@ -3,8 +3,9 @@ import { useAppState } from "../store";
 import CutDiagram from "../components/CutDiagram";
 import SummaryCard from "../components/SummaryCard";
 import WasteSummary from "../components/WasteSummary";
-import { ArrowLeft, Printer } from "lucide-react";
-import { useMemo } from "react";
+import CopyableJson from "../components/CopyableJson";
+import { ArrowLeft, Printer, Copy, Check } from "lucide-react";
+import { useMemo, useState, useCallback } from "react";
 
 export const Route = createFileRoute("/results")({ component: ResultsPage });
 
@@ -109,7 +110,7 @@ function ResultsPage() {
       </section>
 
       {/* Waste breakdown */}
-      <section className="mt-6">
+      <section className="mt-6 print:hidden">
         <WasteSummary results={results} unit={unit} />
       </section>
 
@@ -118,9 +119,7 @@ function ResultsPage() {
         <summary className="text-sm font-semibold text-[var(--sea-ink)] cursor-pointer">
           Raw JSON Output
         </summary>
-        <pre className="mt-3 overflow-x-auto rounded-lg bg-[var(--surface)] border border-[var(--line)] p-4 text-xs text-[var(--sea-ink-soft)] leading-relaxed">
-          {JSON.stringify(results, null, 2)}
-        </pre>
+        <CopyableJson data={{ inputs: { stock: state.stock, cuts: state.cuts, kerf: state.kerf, unit: state.unit }, results }} />
       </details>
     </main>
   );

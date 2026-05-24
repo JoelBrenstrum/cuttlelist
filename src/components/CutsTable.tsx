@@ -48,10 +48,13 @@ export default function CutsTable({ unit }: { unit: string }) {
                 <td className="py-2 pr-2">
                   <input
                     type="number"
-                    value={c.length}
+                    value={c.length || ""}
                     onChange={(e) =>
-                      updateCut(c.id, { length: Math.max(0, Number(e.target.value)) })
+                      updateCut(c.id, { length: Number(e.target.value) || 0 })
                     }
+                    onBlur={(e) => {
+                      if (!Number(e.target.value)) updateCut(c.id, { length: 0 });
+                    }}
                     min={0}
                     step={1}
                     className="w-24 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors tabular-nums"
@@ -60,10 +63,13 @@ export default function CutsTable({ unit }: { unit: string }) {
                 <td className="py-2 pr-2">
                   <input
                     type="number"
-                    value={c.quantity}
+                    value={c.quantity || ""}
                     onChange={(e) =>
-                      updateCut(c.id, { quantity: Math.max(1, Math.round(Number(e.target.value))) })
+                      updateCut(c.id, { quantity: Math.round(Number(e.target.value)) || 0 })
                     }
+                    onBlur={(e) => {
+                      if (!Number(e.target.value)) updateCut(c.id, { quantity: 1 });
+                    }}
                     min={1}
                     step={1}
                     className="w-16 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors tabular-nums"

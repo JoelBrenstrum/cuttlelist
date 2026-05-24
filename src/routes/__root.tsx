@@ -122,7 +122,7 @@ function RootComponent() {
       {/* Footer */}
       <footer className="site-footer mt-auto py-6 text-center text-xs text-[var(--sea-ink-soft)] print:hidden">
         <div className="page-wrap">
-          CuttleList — Open source 1D cut optimizer • Built with TanStack Start
+          CuttleList v0.2.4 — Open source 1D cut optimizer • Built with TanStack Start
         </div>
       </footer>
     </AppProvider>

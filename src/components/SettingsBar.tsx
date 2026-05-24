@@ -23,10 +23,13 @@ export default function SettingsBar() {
           <input
             id="kerf-input"
             type="number"
-            value={state.kerf}
+            value={state.kerf || ""}
             onChange={(e) =>
-              dispatch({ type: "SET_KERF", kerf: Math.max(0, Number(e.target.value)) })
+              dispatch({ type: "SET_KERF", kerf: Number(e.target.value) || 0 })
             }
+            onBlur={(e) => {
+              if (!Number(e.target.value)) dispatch({ type: "SET_KERF", kerf: 0 });
+            }}
             min={0}
             step={0.1}
             className="w-24 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors tabular-nums"

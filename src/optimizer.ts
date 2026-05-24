@@ -513,6 +513,9 @@ function tryEmptyBin(bins: Bin[], srcIndex: number, kerf: number): boolean {
   const srcBin = bins[srcIndex];
   if (srcBin.cuts.length === 0) return false;
 
+  // Never empty priority 1 ("First") bins — the user explicitly wants these used
+  if (srcBin.stock.priority <= 1) return false;
+
   // Try to place each cut from srcBin into other bins
   const cutsToPlace = [...srcBin.cuts];
   // Sort descending so larger pieces placed first
@@ -630,18 +633,219 @@ function trySwaps(bins: Bin[], kerf: number): boolean {
 }
 
 /**
- * Local search improvement: try to empty bins and swap cuts.
+ * Try to move cuts from large stock bins to smaller stock bins that have room.
+ * This fills small stock better and leaves bigger remnants on large stock.
+ *
+ * Example: if a 1200mm bin has 1×480 (720mm waste), and a 4800mm bin has
+ * 3×480 + 2×1000, we can move a 480 from the 4800mm bin to the 1200mm bin,
+ * filling the small stock better and freeing space on the large stock.
+ */
+function tryConsolidate(bins: Bin[], kerf: number): boolean {
+  let improved = false;
+  const activeBins = bins.filter((b) => b.cuts.length > 0);
+
+  // Sort: smaller stock first (these are the "receivers")
+  const sortedBySize = [...activeBins].sort((a, b) => a.stock.length - b.stock.length);
+
+  for (const receiver of sortedBySize) {
+    if (receiver.remaining < 1e-9) continue; // already full
+
+    // Look for donors: bins with LARGER stock that have cuts small enough to move
+    for (const donor of activeBins) {
+      if (donor === receiver) continue;
+      if (donor.stock.length <= receiver.stock.length) continue; // only take from bigger stock
+
+      // Try each cut in the donor
+      for (let ci = donor.cuts.length - 1; ci >= 0; ci--) {
+        const cut = donor.cuts[ci];
+
+        // Would this cut fit in the receiver?
+        if (!canFit(receiver, cut.length, kerf)) continue;
+
+        // Move it: remove from donor, add to receiver
+        donor.cuts.splice(ci, 1);
+        recalcBinRemaining(donor, kerf);
+        placeCut(receiver, cut, kerf);
+        improved = true;
+
+        // If receiver is now full, stop trying to fill it
+        if (receiver.remaining < 1e-9) break;
+      }
+      if (receiver.remaining < 1e-9) break;
+    }
+  }
+
+  return improved;
+}
+
+/**
+ * Rebalance: try replacing a large cut on small stock with smaller cuts from
+ * big stock, when the swap would fill the small stock more fully.
+ *
+ * Example: 1200mm has 1×1000 (200mm remnant). A 4800mm has 3×480 + 2×1000.
+ * Swap the 1000 on the 1200 with 2×480 from the 4800 → 1200 now has 2×480
+ * (240mm remnant) but the 4800 gets a 1000 back and loses 2×480, giving it
+ * a bigger remnant.
+ */
+function tryRebalance(bins: Bin[], kerf: number): boolean {
+  let improved = false;
+  const activeBins = bins.filter((b) => b.cuts.length > 0);
+
+  for (const smallBin of activeBins) {
+    for (let si = 0; si < smallBin.cuts.length; si++) {
+      const largeCut = smallBin.cuts[si];
+
+      for (const bigBin of activeBins) {
+        if (bigBin === smallBin) continue;
+        if (bigBin.stock.length <= smallBin.stock.length) continue;
+
+        // Find cuts in bigBin smaller than largeCut
+        const candidateCuts: { index: number; cut: ExpandedCut }[] = [];
+        for (let bi = 0; bi < bigBin.cuts.length; bi++) {
+          if (bigBin.cuts[bi].length < largeCut.length) {
+            candidateCuts.push({ index: bi, cut: bigBin.cuts[bi] });
+          }
+        }
+        if (candidateCuts.length === 0) continue;
+
+        // Sort candidates largest first for best packing
+        candidateCuts.sort((a, b) => b.cut.length - a.cut.length);
+
+        // Simulate: remove largeCut from smallBin, fit candidates, put largeCut on bigBin
+        const tempSmall: Bin = {
+          stock: smallBin.stock,
+          cuts: smallBin.cuts.filter((_, i) => i !== si),
+          remaining: 0,
+        };
+        recalcBinRemaining(tempSmall, kerf);
+
+        const movedIndices: number[] = [];
+
+        for (const { index, cut } of candidateCuts) {
+          if (canFit(tempSmall, cut.length, kerf)) {
+            placeCut(tempSmall, cut, kerf);
+            movedIndices.push(index);
+          }
+        }
+
+        if (movedIndices.length === 0) continue;
+
+        // Remove moved cuts from bigBin copy and add largeCut
+        const tempBig: Bin = {
+          stock: bigBin.stock,
+          cuts: bigBin.cuts.filter((_, i) => !movedIndices.includes(i)),
+          remaining: 0,
+        };
+        recalcBinRemaining(tempBig, kerf);
+
+        if (!canFit(tempBig, largeCut.length, kerf)) continue;
+        placeCut(tempBig, largeCut, kerf);
+
+        // Accept if total waste doesn't increase AND the big bin gets a bigger
+        // remnant (consolidates waste into fewer, larger pieces).
+        // The small bin may get slightly more waste, but we're trading that
+        // for a much larger remnant on the big stock.
+        const totalOld = smallBin.remaining + bigBin.remaining;
+        const totalNew = tempSmall.remaining + tempBig.remaining;
+        const bigBinImproved = tempBig.remaining > bigBin.remaining + 1e-9;
+
+        if (totalNew <= totalOld + 1e-9 && bigBinImproved) {
+          smallBin.cuts = tempSmall.cuts;
+          smallBin.remaining = tempSmall.remaining;
+          bigBin.cuts = tempBig.cuts;
+          bigBin.remaining = tempBig.remaining;
+          improved = true;
+          break;
+        }
+      }
+      if (improved) break;
+    }
+    if (improved) break;
+  }
+
+  return improved;
+}
+
+/**
+ * Fill gaps: find bins with remaining space that can fit a cut, then move
+ * a matching cut from the bin with the MOST remaining space (least utilized).
+ * This concentrates waste into fewer bins.
+ */
+function tryFillGaps(bins: Bin[], kerf: number): boolean {
+  let improved = false;
+  const activeBins = bins.filter((b) => b.cuts.length > 0);
+
+  // Sort receivers by remaining space ascending (tightest first — fill these)
+  const receivers = [...activeBins].sort((a, b) => a.remaining - b.remaining);
+
+  for (const receiver of receivers) {
+    if (receiver.remaining < 1e-9) continue;
+
+    // Sort donors by remaining space descending (loosest first — take from these)
+    // Never take from priority 1 bins — user wants those used
+    const donors = [...activeBins]
+      .filter((b) => b !== receiver && b.cuts.length > 1 && b.stock.priority > 1)
+      .sort((a, b) => b.remaining - a.remaining);
+
+    for (const donor of donors) {
+      // Skip if donor has less remaining than receiver (would just ping-pong)
+      if (donor.remaining <= receiver.remaining) continue;
+
+      // Find the largest cut in donor that fits the receiver's gap
+      const sortedDonorCuts = donor.cuts
+        .map((cut, index) => ({ cut, index }))
+        .filter(({ cut }) => canFit(receiver, cut.length, kerf))
+        .sort((a, b) => b.cut.length - a.cut.length);
+
+      if (sortedDonorCuts.length === 0) continue;
+
+      // Pick the largest fitting cut — fills the gap most efficiently
+      const { cut, index } = sortedDonorCuts[0];
+
+      // Simulate the move
+      const newReceiverRemaining = remainingAfterPlacement(receiver, cut.length, kerf);
+
+      // Donor loses a cut: recalc its remaining
+      const tempDonor: Bin = {
+        stock: donor.stock,
+        cuts: donor.cuts.filter((_, i) => i !== index),
+        remaining: 0,
+      };
+      recalcBinRemaining(tempDonor, kerf);
+      const newDonorRemaining = tempDonor.remaining;
+
+      // Accept if receiver gets packed tighter and total waste doesn't increase
+      const oldTotal = receiver.remaining + donor.remaining;
+      const newTotal = newReceiverRemaining + newDonorRemaining;
+
+      if (newReceiverRemaining < receiver.remaining - 1e-9 && newTotal <= oldTotal + 1e-9) {
+        donor.cuts.splice(index, 1);
+        recalcBinRemaining(donor, kerf);
+        placeCut(receiver, cut, kerf);
+        improved = true;
+        break;
+      }
+    }
+  }
+
+  return improved;
+}
+
+/**
+ * Local search improvement.
+ * Phase 1: empty bins + swaps + fill gaps to minimize stock count and pack tight.
+ * Phase 2: consolidate + rebalance + fill gaps to ensure small stock is well-utilized.
  */
 function localSearchImprovement(bins: Bin[], kerf: number): void {
   let improved = true;
   let iterations = 0;
   const maxIterations = 100;
 
+  // Phase 1: minimize bin count and pack tight
   while (improved && iterations < maxIterations) {
     improved = false;
     iterations++;
 
-    // Try to empty bins (start from bins with highest priority to save cost)
     const binsByPriority = bins
       .map((_, i) => i)
       .filter((i) => bins[i].cuts.length > 0)
@@ -653,8 +857,25 @@ function localSearchImprovement(bins: Bin[], kerf: number): void {
       }
     }
 
-    // Try swaps
     if (trySwaps(bins, kerf)) {
+      improved = true;
+    }
+  }
+
+  // Phase 2: fill small stock and remaining gaps
+  improved = true;
+  iterations = 0;
+  while (improved && iterations < maxIterations) {
+    improved = false;
+    iterations++;
+
+    if (tryConsolidate(bins, kerf)) {
+      improved = true;
+    }
+    if (tryRebalance(bins, kerf)) {
+      improved = true;
+    }
+    if (tryFillGaps(bins, kerf)) {
       improved = true;
     }
   }

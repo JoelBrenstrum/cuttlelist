@@ -17,7 +17,7 @@ export interface AppState {
 }
 
 const DEFAULT_STATE: AppState = {
-  stock: [{ id: crypto.randomUUID(), length: 2400, quantity: 10, priority: 1 }],
+  stock: [{ id: crypto.randomUUID(), length: 2400, quantity: 10, priority: 3 }],
   cuts: [{ id: crypto.randomUUID(), length: 600, quantity: 4 }],
   altCuts: [],
   altEnabled: false,
@@ -161,7 +161,7 @@ export function useStock() {
         id: crypto.randomUUID(),
         length: 2400,
         quantity: 1,
-        priority: 1,
+        priority: 3,
       },
     });
   }, [dispatch]);

@@ -57,10 +57,13 @@ export default function StockTable({ unit }: { unit: string }) {
                 <td className="py-2 pr-2">
                   <input
                     type="number"
-                    value={s.length}
+                    value={s.length || ""}
                     onChange={(e) =>
-                      updateStock(s.id, { length: Math.max(0, Number(e.target.value)) })
+                      updateStock(s.id, { length: Number(e.target.value) || 0 })
                     }
+                    onBlur={(e) => {
+                      if (!Number(e.target.value)) updateStock(s.id, { length: 0 });
+                    }}
                     min={0}
                     step={1}
                     className="w-24 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors tabular-nums"
@@ -69,12 +72,13 @@ export default function StockTable({ unit }: { unit: string }) {
                 <td className="py-2 pr-2">
                   <input
                     type="number"
-                    value={s.quantity}
+                    value={s.quantity || ""}
                     onChange={(e) =>
-                      updateStock(s.id, {
-                        quantity: Math.max(1, Math.round(Number(e.target.value))),
-                      })
+                      updateStock(s.id, { quantity: Math.round(Number(e.target.value)) || 0 })
                     }
+                    onBlur={(e) => {
+                      if (!Number(e.target.value)) updateStock(s.id, { quantity: 1 });
+                    }}
                     min={1}
                     step={1}
                     className="w-16 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-2.5 py-1.5 text-sm text-[var(--sea-ink)] outline-none focus:border-[var(--lagoon)] transition-colors tabular-nums"
