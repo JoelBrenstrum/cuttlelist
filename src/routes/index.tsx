@@ -6,7 +6,8 @@ import StockTable from "../components/StockTable";
 import CutsTable from "../components/CutsTable";
 import AltCutsTable from "../components/AltCutsTable";
 import SettingsBar from "../components/SettingsBar";
-import { Scissors, Save, GitCompareArrows } from "lucide-react";
+import { Scissors, Save, GitCompareArrows, Download, Upload } from "lucide-react";
+import { useRef } from "react";
 
 export const Route = createFileRoute("/")({ component: InputPage });
 
@@ -53,6 +54,62 @@ function InputPage() {
       id: crypto.randomUUID(),
     }));
     dispatch({ type: "SET_ALT_CUTS", cuts: copiedCuts });
+  };
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = () => {
+    const exportData = {
+      version: 1,
+      name: state.currentSetName,
+      stock: state.stock,
+      cuts: state.cuts,
+      altCuts: state.altCuts,
+      altEnabled: state.altEnabled,
+      kerf: state.kerf,
+      unit: state.unit,
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${state.currentSetName.replace(/[^a-zA-Z0-9_-]/g, "_")}.cuttlelist.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result as string);
+        if (!data.stock || !data.cuts) {
+          alert("Invalid file: missing stock or cuts data.");
+          return;
+        }
+        dispatch({
+          type: "LOAD_STATE",
+          state: {
+            currentSetName: data.name || "Imported",
+            stock: data.stock,
+            cuts: data.cuts,
+            altCuts: data.altCuts || [],
+            altEnabled: data.altEnabled || false,
+            kerf: data.kerf ?? 3,
+            unit: data.unit || "mm",
+          },
+        });
+      } catch {
+        alert("Failed to parse file. Make sure it's a valid .cuttlelist.json file.");
+      }
+    };
+    reader.readAsText(file);
+    // Reset input so the same file can be re-imported
+    e.target.value = "";
   };
 
   const totalCuts = state.cuts.reduce((sum, c) => sum + c.quantity, 0);
@@ -167,6 +224,29 @@ function InputPage() {
           <Save size={16} />
           Save Set
         </button>
+        <button
+          type="button"
+          onClick={handleExport}
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:-translate-y-0.5 hover:border-[var(--lagoon)] cursor-pointer"
+        >
+          <Download size={16} />
+          Export
+        </button>
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold text-[var(--sea-ink)] transition hover:-translate-y-0.5 hover:border-[var(--lagoon)] cursor-pointer"
+        >
+          <Upload size={16} />
+          Import
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,.cuttlelist.json"
+          onChange={handleImport}
+          className="hidden"
+        />
       </div>
     </main>
   );
