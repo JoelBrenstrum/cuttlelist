@@ -584,4 +584,33 @@ describe("optimize", () => {
       expect(bin.wasteLength).toBeLessThan(500);
     }
   });
+
+  it("should place all cuts when gaps exist in used stock (decking scenario)", () => {
+    const stock: StockType[] = [
+      { id: "s2280", length: 2280, quantity: 1, priority: 1 },
+      { id: "s2060", length: 2060, quantity: 2, priority: 1 },
+      { id: "s2020", length: 2020, quantity: 1, priority: 1 },
+      { id: "s2010", length: 2010, quantity: 1, priority: 1 },
+      { id: "s1640", length: 1640, quantity: 1, priority: 1 },
+      { id: "s1930", length: 1930, quantity: 1, priority: 1 },
+      { id: "s1990", length: 1990, quantity: 2, priority: 1 },
+      { id: "s1880", length: 1880, quantity: 1, priority: 1 },
+      { id: "s680", length: 680, quantity: 1, priority: 1 },
+      { id: "s1820", length: 1820, quantity: 1, priority: 1 },
+      { id: "s1720", length: 1720, quantity: 1, priority: 1 },
+      { id: "s1560", length: 1560, quantity: 1, priority: 1 },
+    ];
+    const cuts: CutItem[] = [
+      { id: "cSideLong", length: 1440, quantity: 3 },
+      { id: "cSideShort", length: 610, quantity: 4 },
+      { id: "cTopSmall", length: 466, quantity: 12 },
+      { id: "cTopLarge", length: 934, quantity: 12 },
+      { id: "cSideShortHalf", length: 305, quantity: 2 },
+    ];
+    const result = optimize(stock, cuts, 3);
+
+    // All cuts should be placed — no unplaced when stock has enough remaining
+    expect(result.unplacedCuts).toHaveLength(0);
+    expect(result.totalStockUsed).toBe(14);
+  });
 });

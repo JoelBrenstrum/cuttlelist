@@ -907,6 +907,33 @@ function solveHeuristic(
   // Apply local search improvement
   localSearchImprovement(result.bins, kerf);
 
+  // After local search may have created new gaps, try to place unplaced cuts
+  if (result.unplaced.length > 0) {
+    const stillUnplaced: ExpandedCut[] = [];
+    // Sort unplaced descending so larger cuts get priority
+    const sortedUnplaced = [...result.unplaced].sort((a, b) => b.length - a.length);
+
+    for (const cut of sortedUnplaced) {
+      let bestIdx = -1;
+      let bestRemaining = Infinity;
+      for (let i = 0; i < result.bins.length; i++) {
+        if (canFit(result.bins[i], cut.length, kerf)) {
+          const rem = remainingAfterPlacement(result.bins[i], cut.length, kerf);
+          if (rem < bestRemaining) {
+            bestRemaining = rem;
+            bestIdx = i;
+          }
+        }
+      }
+      if (bestIdx >= 0) {
+        placeCut(result.bins[bestIdx], cut, kerf);
+      } else {
+        stillUnplaced.push(cut);
+      }
+    }
+    result.unplaced = stillUnplaced;
+  }
+
   return result;
 }
 
